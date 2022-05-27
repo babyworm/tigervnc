@@ -21,6 +21,8 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -143,6 +145,29 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
         vlog.error(_("Invalid geometry specified!"));
       }
     }
+  }
+
+  // Many window managers don't properly resize overly large windows,
+  // so we'll have to do some sanity checks ourselves here
+  int sx, sy, sw, sh;
+  if (force_position()) {
+    Fl::screen_work_area(sx, sy, sw, sh, geom_x, geom_y);
+  } else {
+    int mx, my;
+
+    // If we don't explicitly request a position then we don't know which
+    // monitor the window manager might place us on. Assume the popular
+    // behaviour of following the cursor.
+
+    Fl::get_mouse(mx, my);
+    Fl::screen_work_area(sx, sy, sw, sh, mx, my);
+  }
+  if ((w > sw) || (h > sh)) {
+    vlog.info(_("Reducing window size to fit on current monitor"));
+    if (w > sw)
+      w = sw;
+    if (h > sh)
+      h = sh;
   }
 
 #ifdef __APPLE__
@@ -612,12 +637,17 @@ void DesktopWindow::resize(int x, int y, int w, int h)
 
         Fl::screen_xywh(sx, sy, sw, sh, i);
 
-        if ((sx == x) && (sy == y) && (sw == w) && (sh == h)) {
-          vlog.info(_("Adjusting window size to avoid accidental full screen request"));
-          // Assume a panel of some form and adjust the height
-          y += 20;
-          h -= 40;
-        }
+        // We can't trust x and y if the window isn't mapped as the
+        // window manager might adjust those numbers
+        if (shown() && ((sx != x) || (sy != y)))
+            continue;
+
+        if ((sw != w) || (sh != h))
+            continue;
+
+        vlog.info(_("Adjusting window size to avoid accidental full-screen request"));
+        // Assume a panel of some form and adjust the height
+        h -= 40;
       }
     }
   }
@@ -759,6 +789,7 @@ void DesktopWindow::setOverlay(const char* text, ...)
   gettimeofday(&overlayStart, NULL);
 
   delete image;
+  delete [] buffer;
 
   Fl::add_timeout(1.0/60, updateOverlay, this);
 }
@@ -991,7 +1022,8 @@ void DesktopWindow::fullscreen_on()
   fullscreen_screens(top, bottom, left, right);
 #ifdef __APPLE__
   // This is a workaround for a bug in FLTK, see: https://github.com/fltk/fltk/pull/277
-  cocoa_set_level(this, savedLevel);
+  if (cocoa_get_level(this) != savedLevel)
+    cocoa_set_level(this, savedLevel);
 #endif
 
   if (!fullscreen_active())
@@ -1314,13 +1346,15 @@ void DesktopWindow::remoteResize(int width, int height)
       sx -= viewport_rect.tl.x;
       sy -= viewport_rect.tl.y;
 
-      // Look for perfectly matching existing screen...
+      // Look for perfectly matching existing screen that is not yet present in
+      // in the screen layout...
       for (iter = cc->server.screenLayout().begin();
            iter != cc->server.screenLayout().end(); ++iter) {
         if ((iter->dimensions.tl.x == sx) &&
             (iter->dimensions.tl.y == sy) &&
             (iter->dimensions.width() == sw) &&
-            (iter->dimensions.height() == sh))
+            (iter->dimensions.height() == sh) &&
+            (std::find(layout.begin(), layout.end(), *iter) == layout.end()))
           break;
       }
 
@@ -1358,15 +1392,17 @@ void DesktopWindow::remoteResize(int width, int height)
       (layout == cc->server.screenLayout()))
     return;
 
-  char buffer[2048];
   vlog.debug("Requesting framebuffer resize from %dx%d to %dx%d",
              cc->server.width(), cc->server.height(), width, height);
-  layout.print(buffer, sizeof(buffer));
-  vlog.debug("%s", buffer);
 
+  char buffer[2048];
+  layout.print(buffer, sizeof(buffer));
   if (!layout.validate(width, height)) {
     vlog.error(_("Invalid screen layout computed for resize request!"));
+    vlog.error("%s", buffer);
     return;
+  } else {
+    vlog.debug("%s", buffer);
   }
 
   cc->writer()->writeSetDesktopSize(width, height, layout);

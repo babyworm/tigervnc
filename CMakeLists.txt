@@ -2,13 +2,7 @@
 # Setup
 #
 
-cmake_minimum_required(VERSION 2.8.11)
-if(POLICY CMP0022)
-  cmake_policy(SET CMP0022 OLD)
-endif()
-if(${CMAKE_VERSION} VERSION_LESS "3.4.0")
-  message(WARNING "CMake 3.4.0 or newer is required to get correct default installation paths")
-endif()
+cmake_minimum_required(VERSION 3.10.0)
 
 # Internal cmake modules
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
@@ -68,6 +62,11 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -UNDEBUG")
 set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -UNDEBUG")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -UNDEBUG")
 
+# But extra debug checks are still gated by this custom define
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-D_DEBUG)
+ENDIF()
+
 # Make sure we get a sane C version
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 
@@ -109,26 +108,6 @@ endif()
 # Legacy macros (macOS 10.12 and older) conflict with our code
 if(APPLE)
   add_definitions(-D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0)
-endif()
-
-if(CMAKE_SIZEOF_VOID_P MATCHES 8)
-  message(STATUS "64-bit build")
-else()
-  message(STATUS "32-bit build")
-endif()
-
-# Versions of CMake before 2.8.7 do not properly support resource compilation
-# with MinGW.  Boo!
-if(MINGW AND "${CMAKE_VERSION}" VERSION_LESS "2.8.7")
-  if(NOT DEFINED RC)
-    set(CMAKE_RC_COMPILER_INIT windres)
-  else()
-    set(CMAKE_RC_COMPILER_INIT ${RC})
-  endif()
-  enable_language(RC)
-  message(STATUS "Resource compiler: ${CMAKE_RC_COMPILER}")
-  set(CMAKE_RC_COMPILE_OBJECT
-    "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> -o <OBJECT> --output-format=coff <SOURCE>")
 endif()
 
 # MinGW64 has header support but no library support for IActiveDesktop, so we
@@ -189,6 +168,36 @@ if(ENABLE_NLS)
     message(WARNING "Gettext NOT found.  Native Language Support disabled.")
     set(ENABLE_NLS 0)
   endif()
+endif()
+
+option(ENABLE_H264 "Enable H.264 RFB encoding" ON)
+if(ENABLE_H264)
+  if(WIN32)
+    add_definitions("-DHAVE_H264")
+    set(H264_LIBS "WIN")  # may be LIBAV in the future
+    set(H264_LIBRARIES ole32 mfplat mfuuid wmcodecdspuuid)
+  else()
+    check_include_files(libavcodec/avcodec.h HAVE_AVCODEC_H)
+    check_include_files(libavutil/avutil.h HAVE_AVUTIL_H)
+    check_include_files(libswscale/swscale.h HAVE_SWSCALE_H)
+    if (HAVE_AVCODEC_H AND HAVE_AVUTIL_H AND HAVE_SWSCALE_H)
+      find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+      find_library(AVCODEC_LIBRARY avcodec)
+      find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+      find_library(AVUTIL_LIBRARY avutil)
+      find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
+      find_library(SWSCALE_LIBRARY swscale)
+      include_directories(${AVCODEC_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR})
+      set(H264_LIBRARIES ${AVCODEC_LIBRARY} ${AVUTIL_LIBRARY} ${SWSCALE_LIBRARY})
+      add_definitions("-D__STDC_CONSTANT_MACROS")
+      add_definitions("-DHAVE_H264")
+      set(H264_LIBS "LIBAV")
+    else()
+      set(H264_LIBS "NONE")
+      message(WARNING "FFMPEG support can't be found")
+    endif()
+  endif()
+  add_definitions("-DH264_${H264_LIBS}")
 endif()
 
 # Check for libjpeg
@@ -285,6 +294,19 @@ if(UNIX AND NOT APPLE)
     set(PAM_LIBS pam)
   else()
     message(FATAL_ERROR "Could not find PAM development files")
+  endif()
+endif()
+
+# Check for SELinux library
+if(UNIX AND NOT APPLE)
+  check_include_files(selinux/selinux.h HAVE_SELINUX_H)
+  if(HAVE_SELINUX_H)
+    set(CMAKE_REQUIRED_LIBRARIES -lselinux)
+    set(CMAKE_REQUIRED_LIBRARIES)
+    set(SELINUX_LIBS selinux)
+    add_definitions("-DHAVE_SELINUX")
+  else()
+    message(WARNING "Could not find SELinux development files")
   endif()
 endif()
 

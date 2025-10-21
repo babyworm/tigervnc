@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/emulatemb[1]_tests.cmake")
+  include("/app/build/tests/unit/emulatemb[1]_tests.cmake")
+else()
+  add_test(emulatemb_NOT_BUILT emulatemb_NOT_BUILT)
+endif()

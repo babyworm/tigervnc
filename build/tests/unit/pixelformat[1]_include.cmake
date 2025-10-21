@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/pixelformat[1]_tests.cmake")
+  include("/app/build/tests/unit/pixelformat[1]_tests.cmake")
+else()
+  add_test(pixelformat_NOT_BUILT pixelformat_NOT_BUILT)
+endif()

@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/conv[1]_tests.cmake")
+  include("/app/build/tests/unit/conv[1]_tests.cmake")
+else()
+  add_test(conv_NOT_BUILT conv_NOT_BUILT)
+endif()

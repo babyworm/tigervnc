@@ -129,6 +129,7 @@ protected:
   Fl_Check_Button *systemKeysCheckbox;
   Fl_Group *clipboardGroup;
   Fl_Check_Button *acceptClipboardCheckbox;
+  Fl_Int_Input *maxCutTextServerInput;
 #if !defined(WIN32) && !defined(__APPLE__)
   Fl_Check_Button *setPrimaryCheckbox;
 #endif

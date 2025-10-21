@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/convertlf[1]_tests.cmake")
+  include("/app/build/tests/unit/convertlf[1]_tests.cmake")
+else()
+  add_test(convertlf_NOT_BUILT convertlf_NOT_BUILT)
+endif()

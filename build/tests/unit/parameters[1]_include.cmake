@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/parameters[1]_tests.cmake")
+  include("/app/build/tests/unit/parameters[1]_tests.cmake")
+else()
+  add_test(parameters_NOT_BUILT parameters_NOT_BUILT)
+endif()

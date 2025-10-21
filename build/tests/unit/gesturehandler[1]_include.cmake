@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/gesturehandler[1]_tests.cmake")
+  include("/app/build/tests/unit/gesturehandler[1]_tests.cmake")
+else()
+  add_test(gesturehandler_NOT_BUILT gesturehandler_NOT_BUILT)
+endif()

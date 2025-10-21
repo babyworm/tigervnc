@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/unicode[1]_tests.cmake")
+  include("/app/build/tests/unit/unicode[1]_tests.cmake")
+else()
+  add_test(unicode_NOT_BUILT unicode_NOT_BUILT)
+endif()

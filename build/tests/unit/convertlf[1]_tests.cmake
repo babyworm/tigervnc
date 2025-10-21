@@ -1,0 +1,5 @@
+add_test([=[ConvertLF.convertLF]=]  /app/build/tests/unit/convertlf [==[--gtest_filter=ConvertLF.convertLF]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[ConvertLF.convertLF]=]  PROPERTIES WORKING_DIRECTORY /app/build/tests/unit SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[ConvertLF.convertCRLF]=]  /app/build/tests/unit/convertlf [==[--gtest_filter=ConvertLF.convertCRLF]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[ConvertLF.convertCRLF]=]  PROPERTIES WORKING_DIRECTORY /app/build/tests/unit SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  convertlf_TESTS ConvertLF.convertLF ConvertLF.convertCRLF)

@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/configargs[1]_tests.cmake")
+  include("/app/build/tests/unit/configargs[1]_tests.cmake")
+else()
+  add_test(configargs_NOT_BUILT configargs_NOT_BUILT)
+endif()

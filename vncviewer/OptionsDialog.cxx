@@ -311,6 +311,11 @@ void OptionsDialog::loadOptions(void)
   viewOnlyCheckbox->value(viewOnly);
   emulateMBCheckbox->value(emulateMiddleButton);
   acceptClipboardCheckbox->value(acceptClipboard);
+
+  char maxCutTextServerString[32];
+  snprintf(maxCutTextServerString, sizeof(maxCutTextServerString), "%d", (int)MaxCutTextServer);
+  maxCutTextServerInput->value(maxCutTextServerString);
+
 #if !defined(WIN32) && !defined(__APPLE__)
   setPrimaryCheckbox->value(setPrimary);
 #endif
@@ -460,6 +465,7 @@ void OptionsDialog::storeOptions(void)
   viewOnly.setParam(viewOnlyCheckbox->value());
   emulateMiddleButton.setParam(emulateMBCheckbox->value());
   acceptClipboard.setParam(acceptClipboardCheckbox->value());
+  MaxCutTextServer.setParam(atoi(maxCutTextServerInput->value()));
 #if !defined(WIN32) && !defined(__APPLE__)
   setPrimary.setParam(setPrimaryCheckbox->value());
 #endif
@@ -942,6 +948,12 @@ void OptionsDialog::createInputPage(int tx, int ty, int tw, int th)
                                                            _("Accept clipboard from server")));
     acceptClipboardCheckbox->callback(handleClipboard, this);
     ty += CHECK_HEIGHT + TIGHT_MARGIN;
+
+    maxCutTextServerInput = new Fl_Int_Input(tx + INDENT, ty,
+                                       INPUT_HEIGHT, INPUT_HEIGHT,
+                                       _("Limit received clipboard to (bytes)"));
+    maxCutTextServerInput->align(FL_ALIGN_RIGHT);
+    ty += INPUT_HEIGHT + INNER_MARGIN;
 
 #if !defined(WIN32) && !defined(__APPLE__)
     setPrimaryCheckbox = new Fl_Check_Button(LBLRIGHT(tx + INDENT, ty,

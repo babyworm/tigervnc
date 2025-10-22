@@ -200,6 +200,10 @@ core::BoolParameter
   acceptClipboard("AcceptClipboard",
                   "Accept clipboard changes from the server",
                   true);
+core::IntParameter
+  MaxCutTextServer("MaxCutTextServer",
+             "The maximum size of a clipboard update that will be accepted from a server",
+             4096);
 core::BoolParameter
   sendClipboard("SendClipboard",
                 "Send clipboard changes to the server",

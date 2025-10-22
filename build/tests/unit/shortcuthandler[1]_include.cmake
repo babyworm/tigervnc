@@ -1,0 +1,5 @@
+if(EXISTS "/app/build/tests/unit/shortcuthandler[1]_tests.cmake")
+  include("/app/build/tests/unit/shortcuthandler[1]_tests.cmake")
+else()
+  add_test(shortcuthandler_NOT_BUILT shortcuthandler_NOT_BUILT)
+endif()

@@ -66,6 +66,7 @@ extern core::BoolParameter viewOnly;
 extern core::BoolParameter shared;
 
 extern core::BoolParameter acceptClipboard;
+extern core::IntParameter MaxCutTextServer;
 extern core::BoolParameter setPrimary;
 extern core::BoolParameter sendClipboard;
 #if !defined(WIN32) && !defined(__APPLE__)

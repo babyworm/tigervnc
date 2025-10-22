@@ -309,6 +309,11 @@ void Viewport::handleClipboardData(const char* data)
 
   vlog.debug("Got clipboard data (%d bytes)", (int)len);
 
+  if (len > (size_t)(int)MaxCutTextServer) {
+    vlog.debug("Clipboard data truncated to %d bytes", (int)MaxCutTextServer);
+    len = (size_t)(int)MaxCutTextServer;
+  }
+
   // RFB doesn't have separate selection and clipboard concepts, so we
   // dump the data into both variants.
 #if !defined(WIN32) && !defined(__APPLE__)

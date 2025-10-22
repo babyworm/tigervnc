@@ -186,6 +186,11 @@ The maximum size of a clipboard update that will be accepted from a client.
 Default is \fB262144\fP.
 .
 .TP
+.B \-MaxCutTextServer \fIbytes\fP
+The maximum size of a clipboard update that will be accepted from a server.
+Default is \fB4096\fP.
+.
+.TP
 .B \-MaxDisconnectionTime \fIseconds\fP
 Terminate when no client has been connected for \fIN\fP seconds.  Default is
 0.
